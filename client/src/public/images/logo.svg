@@ -1,0 +1,17 @@
+<svg width="300" height="100" viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Movie Camera Icon -->
+  <g transform="translate(10,20)">
+    <!-- Body -->
+    <rect x="0" y="10" width="60" height="40" rx="5" fill="#18c964"></rect>
+    <!-- Lens -->
+    <polygon points="60,15 90,5 90,55 60,45" fill="#1824c9"></polygon>
+    <!-- Reels -->
+    <circle cx="15" cy="0" r="8" fill="#ffffff" stroke="#18c964" stroke-width="3"></circle>
+    <circle cx="40" cy="0" r="8" fill="#ffffff" stroke="#18c964" stroke-width="3"></circle>
+  </g>
+
+  <!-- “Movie Tracker” Text -->
+  <text x="105" y="55" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="start" alignment-baseline="middle">
+    Movie Tracker
+  </text>
+</svg>
