@@ -1,3 +1,4 @@
+import axios from "axios";
 import { loadHeaderFooter } from "./utils.mjs";
 
 const getAuthStatus = async ()  => {
