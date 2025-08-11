@@ -3,6 +3,11 @@
   functions = "server/functions"
   publish   = "client/dist"
 
+[dev]
+  command    = "npm run dev --prefix client"  
+  targetPort = 5173                            
+  port       = 8888   
+
 [[redirects]]
   from = "/api/*"
   to   = "/.netlify/functions/:splat"

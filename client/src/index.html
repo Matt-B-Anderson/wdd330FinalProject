@@ -1,17 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movie Tracker | Home</title>
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/style.css" />
     <script src="./js/main.js" type="module"></script>
-    <base href="/">
-</head>
-<body>
+    <base href="/" />
+  </head>
+  <body>
     <main>
-        <header id="main-header"></header>
+      <header id="main-header"></header>
+      <section class="search">
+        <form id="searchForm" role="search" aria-label="Movie search">
+          <label for="q" class="visually-hidden">Search movies</label>
+          <input
+            id="q"
+            name="q"
+            type="search"
+            placeholder="Search movies…"
+            autocomplete="off"
+            required
+          />
+          <button type="submit" aria-label="Search">Search</button>
+        </form>
+        <p id="resultsInfo" aria-live="polite"></p>
+      </section>
+
+      <section
+        id="resultsGrid"
+        class="results-grid"
+        aria-label="Search results"
+      ></section>
     </main>
     <footer id="main-footer"></footer>
-</body>
+  </body>
 </html>
