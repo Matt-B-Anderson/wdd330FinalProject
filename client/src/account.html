@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Account</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <header id="main-header"></header>
+    <main class="account-wrap">
+      <section id="auth" class="auth-card" hidden>
+        <h2>Log in</h2>
+        <form id="loginForm">
+          <input id="email" type="email" placeholder="Email" required />
+          <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            required
+          />
+          <div class="row">
+            <button class="btn" type="submit">Log in</button>
+            <button class="btn" type="button" id="signupBtn">
+              Create account
+            </button>
+          </div>
+          <p id="authMsg"></p>
+        </form>
+      </section>
+
+      <section id="account" hidden>
+        <div class="topbar">
+          <h2>My Watch List</h2>
+        </div>
+        <div id="watchGrid" class="grid"></div>
+      </section>
+    </main>
+    <footer id="main-footer"></footer>
+    <script type="module" src="/js/account.js"></script>
+  </body>
+</html>

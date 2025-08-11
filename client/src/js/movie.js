@@ -1,7 +1,5 @@
 import axios from "axios";
-import { loadHeaderFooter
-    
- } from "./utils.mjs";
+import { loadHeaderFooter, initAuthNav } from "./utils.mjs";
 
 const params = new URLSearchParams(location.search);
 const tmdbId = params.get("id");       // from your search cards
@@ -56,6 +54,7 @@ function esc(s = "") { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;"
 
 async function init(){
     await loadHeaderFooter();
+    initAuthNav();
 }
 
 init();

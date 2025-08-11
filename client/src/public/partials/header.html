@@ -8,8 +8,14 @@
             <li>
                 <a href="/movie">Movie Details</a>
             </li>
-            <li>
-                <a href="#">Account</a>
+            <li class="guest-only">
+                <a href="/account">Login</a>
+            </li>
+            <li class="authed-only" hidden>
+                <a href="/account">My Watch List</a>
+            </li>
+            <li class="authed-only" hidden>
+                <button id="nav-logout" class="nav-linklike">Logout</button>
             </li>
         </ul>
     </nav>
