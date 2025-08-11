@@ -1,6 +1,6 @@
 import axios from "axios";
-import { loadHeaderFooter, initAuthNav } from "./utils.mjs";
-import { getRecent, SEARCH_KEY, DETAILS_KEY } from "./recent.mjs";
+import { loadHeaderFooter, initAuthNav, wireNavDetailsLink, initNavMenu } from "./utils.mjs";
+import { getRecent, DETAILS_KEY } from "./recent.mjs";
 
 const params = new URLSearchParams(location.search);
 let tmdbId = params.get("id");
@@ -15,12 +15,14 @@ const info = document.getElementById("info");
 (async function init() {
     await loadHeaderFooter();
     await initAuthNav();
+    initNavMenu();
+    wireNavDetailsLink();
     const recentClick = getRecent(sessionStorage.getItem(DETAILS_KEY));
     const fallbackTmdbId = recentClick?.id ? String(recentClick.id) : null;
     if (!hasId) {
         if (!recentClick) {
             location.replace("/");
-        } else location.replace(`/movie/?id=${recentClick.id}`)
+        }
     }
 
     const queryParams = imdbId ? { imdb: qsImdb } : (tmdbId || fallbackTmdbId) ? { id: tmdbId || fallbackTmdbId } : null;

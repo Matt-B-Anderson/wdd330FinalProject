@@ -1,5 +1,5 @@
 import axios from "axios";
-import { loadHeaderFooter, initAuthNav } from "./utils.mjs";
+import { loadHeaderFooter, initAuthNav, wireNavDetailsLink, initNavMenu } from "./utils.mjs";
 
 const el = (id) => document.getElementById(id);
 const authSec = el("auth");
@@ -130,7 +130,9 @@ checkSession();
 
 async function init(){
     await loadHeaderFooter();
+    initNavMenu();
     initAuthNav();
+    wireNavDetailsLink();
 }
 
 init();

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { loadHeaderFooter, initAuthNav } from "./utils.mjs";
+import { loadHeaderFooter, initAuthNav, wireNavDetailsLink, initNavMenu } from "./utils.mjs";
 import { rememberSearch, rememberDetailsClick } from "./recent.mjs";
 
 const form = document.getElementById("searchForm");
@@ -113,7 +113,9 @@ function escapeHTML(s) {
 
 async function init(){
     await loadHeaderFooter();
+    initNavMenu();
     initAuthNav();
+    wireNavDetailsLink();
 }
 
 init();
