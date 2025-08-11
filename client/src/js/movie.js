@@ -20,7 +20,7 @@ const info = document.getElementById("info");
     if (!hasId) {
         if (!recentClick) {
             location.replace("/");
-        }
+        } else location.replace(`/movie/?id=${recentClick.id}`)
     }
 
     const queryParams = imdbId ? { imdb: qsImdb } : (tmdbId || fallbackTmdbId) ? { id: tmdbId || fallbackTmdbId } : null;
