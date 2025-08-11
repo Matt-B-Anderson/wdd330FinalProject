@@ -16,11 +16,9 @@ const info = document.getElementById("info");
     await loadHeaderFooter();
     await initAuthNav();
     const recentClick = getRecent(sessionStorage.getItem(DETAILS_KEY));
-    const recentSearch = getRecent(localStorage.getItem(SEARCH_KEY));
     const fallbackTmdbId = recentClick?.id ? String(recentClick.id) : null;
-    console.log(hasId);
     if (!hasId) {
-        if (!recentClick && !recentSearch) {
+        if (!recentClick) {
             location.replace("/");
         }
     }
