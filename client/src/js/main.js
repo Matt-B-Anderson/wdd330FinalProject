@@ -47,22 +47,20 @@ function renderResults(items) {
 
 function toCardHTML(m) {
   const title = m.title ?? "Untitled";
-  const year  = (m.release_date || "").slice(0, 4);
-  const rating = m.vote_average != null ? m.vote_average.toFixed(1) : "—";
-  const hasPoster = !!m.poster_path;
-
-  const imgHTML = hasPoster
+  const imgHTML = m.poster_path
     ? `<img src="${IMG_BASE}${m.poster_path}" alt="Poster for ${escapeHTML(title)}">`
     : `<div class="poster-fallback">No Image</div>`;
 
   return `
-    <article class="movie-card" data-id="${m.id}">
+    <a class="movie-card"
+       href="/movie.html?id=${m.id}"
+       data-id="${m.id}"
+       aria-label="View details for ${escapeHTML(title)}">
       ${imgHTML}
       <div class="meta">
         <div class="title">${escapeHTML(title)}</div>
-        <div class="sub">${year ? year + " • " : ""}⭐ ${rating}</div>
       </div>
-    </article>
+    </a>
   `;
 }
 

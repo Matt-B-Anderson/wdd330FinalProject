@@ -8,7 +8,8 @@ export default defineConfig(({ command }) => ({
     outDir: "../dist",
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "src/index.html")
+        main: resolve(__dirname, "src/index.html"),
+        movie: resolve(__dirname, "src/movie.html")
       },
     },
   },
