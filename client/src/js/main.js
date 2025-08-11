@@ -55,7 +55,7 @@ function toCardHTML(m) {
 
   return `
     <article class="movie-card" data-id="${m.id}">
-      <a class="cover" href="/movie.html?id=${m.id}" aria-label="View details for ${escapeHTML(title)}">
+      <a class="cover" href="/movie?id=${m.id}" aria-label="View details for ${escapeHTML(title)}">
         ${imgHTML}
         <div class="meta">
           <div class="title">${escapeHTML(title)}</div>
@@ -85,7 +85,7 @@ grid.addEventListener("click", async (e) => {
       );
       if (res.status === 401) {
         const back = encodeURIComponent(location.pathname + location.search);
-        location.href = `/account.html?redirect=${back}`;
+        location.href = `/account?redirect=${back}`;
         return;
       }
       btn.textContent = "Added ✓";
@@ -96,7 +96,7 @@ grid.addEventListener("click", async (e) => {
     return;
   }
 
-  const link = e.target.closest('a[href^="/movie.html"]');
+  const link = e.target.closest('a[href^="/movie"]');
   if (link && grid.contains(link)) {
     const id = new URL(link.getAttribute("href"), location.origin)
       .searchParams.get("id");

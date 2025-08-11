@@ -116,7 +116,7 @@ grid.addEventListener('click', async (e) => {
       grid.innerHTML = emptyStateHTML();
     }
   } else if (res.status === 401) {
-    location.href = '/account.html';
+    location.href = '/account';
   } else {
     btn.disabled = false;
     btn.textContent = 'Try again';

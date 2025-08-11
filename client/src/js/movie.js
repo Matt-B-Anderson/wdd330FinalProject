@@ -81,7 +81,7 @@ const info = document.getElementById("info");
                 );
                 if (res.status === 401) {
                     const back = encodeURIComponent(location.pathname + location.search);
-                    location.href = `/account.html?redirect=${back}`;
+                    location.href = `/account?redirect=${back}`;
                     return;
                 }
                 alreadyWatched = true;
@@ -95,7 +95,7 @@ const info = document.getElementById("info");
                 });
                 if (res.status === 401) {
                     const back = encodeURIComponent(location.pathname + location.search);
-                    location.href = `/account.html?redirect=${back}`;
+                    location.href = `/account?redirect=${back}`;
                     return;
                 }
                 alreadyWatched = false;
