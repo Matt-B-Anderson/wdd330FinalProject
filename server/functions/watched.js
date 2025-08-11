@@ -1,55 +1,51 @@
 import axios from "axios";
-import { getUserIdFromEvent } from "./_auth.js";
 import { q } from "./_db.js";
+import { getUserIdFromEvent } from "./_auth.js";
 
-async function fetchTmdbMovie(tmdbId) {
-  const V4 = process.env.TMDB_V4_TOKEN;
-  const V3 = process.env.TMDB_V3_KEY;
-  const url = `https://api.themoviedb.org/3/movie/${encodeURIComponent(tmdbId)}`;
-  const opts = V4 ? { headers: { Authorization: `Bearer ${V4}` } } : { params: { api_key: V3 } };
-  const { data } = await axios.get(url, opts);
-  return data;
-}
+const cors = (origin) => ({
+  "Access-Control-Allow-Origin": origin || "*",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  Vary: "Origin"
+});
+const json = (code, body, origin) => ({
+  statusCode: code,
+  headers: { "Content-Type": "application/json", ...cors(origin) },
+  body: typeof body === "string" ? body : JSON.stringify(body ?? {})
+});
 
 export async function handler(event) {
-  const origin = event.headers.origin || "";
-  const cors = {
-    "Access-Control-Allow-Origin": origin || "*",
-    "Vary": "Origin",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  };
-  const json = (statusCode, bodyObj) => ({
-    statusCode,
-    headers: { "Content-Type": "application/json", ...cors },
-    body: typeof bodyObj === "string" ? bodyObj : JSON.stringify(bodyObj ?? {})
-  });
+  try {
+    if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: cors(event.headers.origin), body: "" };
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: cors, body: "" };
-  }
+    const userId = getUserIdFromEvent(event);
+    if (!userId) return json(401, { message: "Unauthorized" }, event.headers.origin);
 
-  const userId = getUserIdFromEvent(event);
-  if (!userId) return json(401, "Unauthorized");
+    if (event.httpMethod === "GET") {
+      const { rows } = await q(`
+        SELECT w.tmdb_id, w.added_at, m.title, m.poster_path
+        FROM user_watched_movies w
+        LEFT JOIN movies m USING (tmdb_id)
+        WHERE w.user_id = $1
+        ORDER BY w.added_at DESC
+      `, [userId]);
+      return json(200, { results: rows }, event.headers.origin);
+    }
 
-  if (event.httpMethod === "GET") {
-    const { rows } = await q(`
-      SELECT w.tmdb_id, w.added_at, m.title, m.poster_path
-      FROM user_watched_movies w
-      LEFT JOIN movies m USING (tmdb_id)
-      WHERE w.user_id = $1
-      ORDER BY w.added_at DESC
-    `, [userId]);
-    return json(200, { results: rows });
-  }
+    if (event.httpMethod === "POST") {
+      const { tmdb_id } = JSON.parse(event.body || "{}");
+      if (!tmdb_id) return json(400, { message: "tmdb_id required" }, event.headers.origin);
 
-  if (event.httpMethod === "POST") {
-    const { tmdb_id } = JSON.parse(event.body || "{}");
-    if (!tmdb_id) return json(400, { message: "tmdb_id required" });
+      // keep external calls snappy + safe
+      const V4 = process.env.TMDB_V4_TOKEN;
+      const V3 = process.env.TMDB_V3_KEY;
+      const url = `https://api.themoviedb.org/3/movie/${encodeURIComponent(tmdb_id)}`;
+      const opts = V4 ? { headers: { Authorization: `Bearer ${V4}` }, timeout: 8000 }
+                      : { params: { api_key: V3 }, timeout: 8000 };
 
-    try {
-      const m = await fetchTmdbMovie(tmdb_id);
+      const { data: m } = await axios.get(url, opts);
+
       await q(`
         INSERT INTO movies (tmdb_id, title, release_date, poster_path, imdb_id, metadata)
         VALUES ($1,$2,$3,$4,$5,$6)
@@ -62,26 +58,20 @@ export async function handler(event) {
               updated_at=now()
       `, [m.id, m.title ?? null, m.release_date ?? null, m.poster_path ?? null, m.imdb_id ?? null, m]);
 
-      await q(`
-        INSERT INTO user_watched_movies (user_id, tmdb_id)
-        VALUES ($1,$2)
-        ON CONFLICT DO NOTHING
-      `, [userId, tmdb_id]);
-
-      return json(200, { ok: true });
-    } catch (err) {
-      const status = err.response?.status || 500;
-      const message = err.response?.data || err.message;
-      return json(status, { message });
+      await q(`INSERT INTO user_watched_movies (user_id, tmdb_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`, [userId, tmdb_id]);
+      return json(200, { ok: true }, event.headers.origin);
     }
-  }
 
-  if (event.httpMethod === "DELETE") {
-    const { tmdb_id } = JSON.parse(event.body || "{}");
-    if (!tmdb_id) return json(400, { message: "tmdb_id required" });
-    await q(`DELETE FROM user_watched_movies WHERE user_id=$1 AND tmdb_id=$2`, [userId, tmdb_id]);
-    return json(200, { ok: true });
-  }
+    if (event.httpMethod === "DELETE") {
+      const { tmdb_id } = JSON.parse(event.body || "{}");
+      if (!tmdb_id) return json(400, { message: "tmdb_id required" }, event.headers.origin);
+      await q(`DELETE FROM user_watched_movies WHERE user_id=$1 AND tmdb_id=$2`, [userId, tmdb_id]);
+      return json(200, { ok: true }, event.headers.origin);
+    }
 
-  return json(405, "Method Not Allowed");
+    return json(405, { message: "Method Not Allowed" }, event.headers.origin);
+  } catch (err) {
+    console.error("watched error:", err?.stack || err);           // <- shows up in logs
+    return json(500, { message: err?.message || String(err) }, event.headers.origin);
+  }
 }

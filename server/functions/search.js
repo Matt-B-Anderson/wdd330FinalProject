@@ -1,34 +1,46 @@
-import axios from 'axios';
-import 'dotenv/config';
+import axios from "axios";
 
-export async function handler(event, context) {
-  const q = (event.queryStringParameters?.q || "").trim();
-  if (!q) return { statusCode: 400, body: JSON.stringify({ message: "Missing ?q" }) };
+const cors = (origin) => ({
+  "Access-Control-Allow-Origin": origin || "*",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  Vary: "Origin"
+});
+const json = (code, body, origin) => ({
+  statusCode: code,
+  headers: { "Content-Type": "application/json", ...cors(origin) },
+  body: typeof body === "string" ? body : JSON.stringify(body ?? {})
+});
 
-  const v4 = process.env.TMDB_V4_TOKEN;
-  const v3 = process.env.TMDB_V3_KEY;
+export async function handler(event) {
+  const origin = event.headers.origin;
 
-  if (!v4 && !v3) {
-    return { statusCode: 500, body: JSON.stringify({ message: "TMDB credentials not configured" }) };
-  }
+  if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: cors(origin), body: "" };
+  if (event.httpMethod !== "GET") return json(405, { message: "Method Not Allowed" }, origin);
 
   try {
-    const url = "https://api.themoviedb.org/3/search/movie";
+    const q = (event.queryStringParameters?.q || "").trim();
+    if (!q) return json(400, { message: "Missing query ?q" }, origin);
 
-    const opts = v4
-      ? {
-          headers: { Authorization: `Bearer ${v4}` },
-          params: { query: q, include_adult: false, language: "en-US", page: 1 }
-        }
-      : {
-          params: { api_key: v3, query: q, include_adult: false, language: "en-US", page: 1 }
-        };
+    const V4 = process.env.TMDB_V4_TOKEN;
+    const V3 = process.env.TMDB_V3_KEY;
+    if (!V4 && !V3) return json(500, { message: "TMDB credentials not configured" }, origin);
+
+    const url = "https://api.themoviedb.org/3/search/movie";
+    const opts = V4
+      ? { headers: { Authorization: `Bearer ${V4}` }, params: { query: q, include_adult: false, language: "en-US", page: 1 }, timeout: 8000 }
+      : { params: { api_key: V3, query: q, include_adult: false, language: "en-US", page: 1 }, timeout: 8000 };
 
     const { data } = await axios.get(url, opts);
-    return { statusCode: 200, body: JSON.stringify({ results: data.results ?? [] }) };
+    const results = Array.isArray(data?.results) ? data.results.map(m => ({
+      id: m.id, title: m.title, release_date: m.release_date, poster_path: m.poster_path, vote_average: m.vote_average
+    })) : [];
+
+    return json(200, { results }, origin);
   } catch (err) {
     const status = err.response?.status || 500;
-    const msg = err.response?.data || err.message;
-    return { statusCode: status, body: JSON.stringify({ message: msg }) };
+    const message = err.response?.data || err.message;
+    return json(status, { message }, origin);
   }
 }
