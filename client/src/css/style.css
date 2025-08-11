@@ -165,7 +165,6 @@ nav ul li .nav-linklike:hover { color: var(--primary-color); }
 
 .movie-card {
   background: var(--background);
-  color: var(--soft-off-white);
   text-decoration: none;
   border-radius: 14px;
   overflow: hidden;
@@ -175,7 +174,19 @@ nav ul li .nav-linklike:hover { color: var(--primary-color); }
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
+  height: max-content;
 }
+
+.movie-card a {
+  text-decoration: none;
+}
+
+.movie-card .actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: .5rem .6rem .7rem;
+}
+
 .movie-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
@@ -197,11 +208,26 @@ nav ul li .nav-linklike:hover { color: var(--primary-color); }
 .movie-card .title {
   font-weight: 700;
   line-height: 1.2;
+  color: var(--soft-off-white);
 }
 .movie-card .sub {
   opacity: 0.8;
   font-size: 0.9rem;
 }
+
+.watch-btn {
+  padding: .4rem .7rem;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--primary-color);
+  transition: transform .15s ease, opacity .15s ease;
+  width: fit-content;
+  height: max-content;
+}
+.watch-btn:hover { transform: translateY(-1px); opacity: .92; }
+.watch-btn:disabled { opacity: .7; cursor: default; }
 
 .poster-fallback {
   width: 100%;
@@ -414,11 +440,18 @@ nav ul li .nav-linklike:hover { color: var(--primary-color); }
   padding: 0 1rem;
 }
 
-.auth-card,
-#account {
+.auth-card {
   background: var(--background);            
   color: var(--soft-off-white);
   border-radius: 14px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 8px 22px rgba(0,0,0,.25);
+}
+
+#account {
+  border: 5px solid var(--background);
+  color: var(--background);
+  border-radius: 1rem;
   padding: 1rem 1.25rem;
   box-shadow: 0 8px 22px rgba(0,0,0,.25);
 }
@@ -471,8 +504,14 @@ nav ul li .nav-linklike:hover { color: var(--primary-color); }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
+  justify-content: center;
+  align-items: start;
   gap: 1rem;
+  padding: .5rem;
+}
+@media (min-width: 900px) {
+  .grid { grid-template-columns: repeat(auto-fit, minmax(200px, 260px)); }
 }
 
 .card {
@@ -502,6 +541,12 @@ nav ul li .nav-linklike:hover { color: var(--primary-color); }
   padding: .6rem .75rem;
   font-weight: 600;
   line-height: 1.25;
+}
+
+.card .row .btn.danger {
+  padding: .35rem .6rem;
+  border-radius: 8px;
+  font-size: .9rem;
 }
 
 :where(.btn, .card):focus-visible {

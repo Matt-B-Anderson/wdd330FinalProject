@@ -1,9 +1,11 @@
 import axios from "axios";
 import { loadHeaderFooter, initAuthNav } from "./utils.mjs";
+import { getRecent, SEARCH_KEY, DETAILS_KEY } from "./recent.mjs";
 
 const params = new URLSearchParams(location.search);
-const tmdbId = params.get("id");       // from your search cards
-const imdbId = params.get("imdb");     // optional direct IMDb link
+let tmdbId = params.get("id");
+let imdbId = params.get("imdb");
+const hasId = params.has("id") || params.has("imdb");
 
 const hero = document.getElementById("hero");
 const titleEl = hero.querySelector(".hero-title");
@@ -11,12 +13,21 @@ const poster = document.getElementById("poster");
 const info = document.getElementById("info");
 
 (async function init() {
-    if (!tmdbId && !imdbId) {
-        titleEl.textContent = "Missing movie id";
-        return;
+    await loadHeaderFooter();
+    await initAuthNav();
+    const recentClick = getRecent(sessionStorage.getItem(DETAILS_KEY));
+    const recentSearch = getRecent(localStorage.getItem(SEARCH_KEY));
+    const fallbackTmdbId = recentClick?.id ? String(recentClick.id) : null;
+    if (!hasId) {
+        if (!recentClick && !recentSearch) {
+            location.replace("/");
+        }
     }
+
+    const queryParams = imdbId ? { imdb: qsImdb } : (tmdbId || fallbackTmdbId) ? { id: tmdbId || fallbackTmdbId } : null;
+
     try {
-        const { data: m } = await axios.get(`/api/movie`, { params: { id: tmdbId, imdb: imdbId } });
+        const { data: m } = await axios.get(`/api/movie`, { params: queryParams });
 
         document.title = `${m.title} – Movie Details`;
         titleEl.textContent = m.title || "Untitled";
@@ -43,6 +54,56 @@ const info = document.getElementById("info");
       <!-- Optional actions -->
       <!--<button class="btn">Mark as watched</button>-->
     `;
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'btn';
+        toggleBtn.id = 'watchedToggle';
+        toggleBtn.textContent = 'Mark as watched';
+        info.appendChild(toggleBtn);
+
+        let alreadyWatched = false;
+        try {
+            const res = await axios.get('/api/watched', {
+                withCredentials: true,
+                validateStatus: s => [200, 401].includes(s)
+            });
+            if (res.status === 200) {
+                alreadyWatched = (res.data?.results || []).some(r => r.tmdb_id === Number(tmdbId));
+                if (alreadyWatched) toggleBtn.textContent = 'Remove from watched';
+            }
+        } catch { }
+
+        toggleBtn.addEventListener('click', async () => {
+            toggleBtn.disabled = true;
+
+            if (!alreadyWatched) {
+                const res = await axios.post('/api/watched',
+                    { tmdb_id: Number(tmdbId) },
+                    { withCredentials: true, validateStatus: s => [200, 401].includes(s) }
+                );
+                if (res.status === 401) {
+                    const back = encodeURIComponent(location.pathname + location.search);
+                    location.href = `/account.html?redirect=${back}`;
+                    return;
+                }
+                alreadyWatched = true;
+                toggleBtn.textContent = 'Remove from watched';
+                toggleBtn.disabled = false;
+            } else {
+                const res = await axios.delete('/api/watched', {
+                    data: { tmdb_id: Number(tmdbId) },
+                    withCredentials: true,
+                    validateStatus: s => [200, 401, 404].includes(s)
+                });
+                if (res.status === 401) {
+                    const back = encodeURIComponent(location.pathname + location.search);
+                    location.href = `/account.html?redirect=${back}`;
+                    return;
+                }
+                alreadyWatched = false;
+                toggleBtn.textContent = 'Mark as watched';
+                toggleBtn.disabled = false;
+            }
+        });
     } catch (err) {
         console.error(err);
         titleEl.textContent = "Couldn’t load movie";
@@ -51,10 +112,3 @@ const info = document.getElementById("info");
 })();
 
 function esc(s = "") { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c])); }
-
-async function init(){
-    await loadHeaderFooter();
-    initAuthNav();
-}
-
-init();

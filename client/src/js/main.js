@@ -1,5 +1,6 @@
 import axios from "axios";
 import { loadHeaderFooter, initAuthNav } from "./utils.mjs";
+import { rememberSearch, rememberDetailsClick } from "./recent.mjs";
 
 const form = document.getElementById("searchForm");
 const input = document.getElementById("q");
@@ -19,6 +20,7 @@ form.addEventListener("submit", async (e) => {
   try {
     const { data } = await axios.get(`/api/search`, { params: { q: query } });
     const results = Array.isArray(data?.results) ? data.results : [];
+    rememberSearch(query);
     renderResults(results);
     info.textContent = results.length
       ? `Found ${results.length} result${results.length === 1 ? "" : "s"} for “${query}”.`
@@ -52,19 +54,56 @@ function toCardHTML(m) {
     : `<div class="poster-fallback">No Image</div>`;
 
   return `
-    <a class="movie-card"
-       href="/movie.html?id=${m.id}"
-       data-id="${m.id}"
-       aria-label="View details for ${escapeHTML(title)}">
-      ${imgHTML}
-      <div class="meta">
-        <div class="title">${escapeHTML(title)}</div>
+    <article class="movie-card" data-id="${m.id}">
+      <a class="cover" href="/movie.html?id=${m.id}" aria-label="View details for ${escapeHTML(title)}">
+        ${imgHTML}
+        <div class="meta">
+          <div class="title">${escapeHTML(title)}</div>
+        </div>
+      </a>
+      <div class="actions">
+        <button class="watch-btn" type="button" data-id="${m.id}"
+          aria-label="Mark ${escapeHTML(title)} as watched">Mark as watched</button>
       </div>
-    </a>
+    </article>
   `;
 }
 
-// simple escape for titles
+
+grid.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".watch-btn");
+  if (btn && grid.contains(btn)) {
+    e.preventDefault();
+    const id = Number(btn.dataset.id);
+    btn.disabled = true;
+
+    try {
+      const res = await axios.post(
+        "/api/watched",
+        { tmdb_id: id },
+        { withCredentials: true, validateStatus: s => [200, 401].includes(s) }
+      );
+      if (res.status === 401) {
+        const back = encodeURIComponent(location.pathname + location.search);
+        location.href = `/account.html?redirect=${back}`;
+        return;
+      }
+      btn.textContent = "Added ✓";
+    } catch {
+      btn.disabled = false;
+      btn.textContent = "Try again";
+    }
+    return;
+  }
+
+  const link = e.target.closest('a[href^="/movie.html"]');
+  if (link && grid.contains(link)) {
+    const id = new URL(link.getAttribute("href"), location.origin)
+      .searchParams.get("id");
+    if (id) rememberDetailsClick(Number(id));
+  }
+});
+
 function escapeHTML(s) {
   return s.replace(/[&<>"']/g, (c) => (
     { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]

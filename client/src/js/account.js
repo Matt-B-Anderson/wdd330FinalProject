@@ -51,14 +51,22 @@ function cardHTML(m) {
   const poster = m.poster_path
     ? `https://image.tmdb.org/t/p/w342${m.poster_path}`
     : null;
-  const img = poster
-    ? `<img src="${poster}" alt="Poster for ${escapeHtml(title)}">`
-    : `<div style="height:240px;display:grid;place-items:center;background:#111;color:#fff">No image</div>`;
+
   return `
-    <a class="card" href="/movie.html?id=${m.tmdb_id}">
-      ${img}
-      <div class="meta">${escapeHtml(title)}</div>
-    </a>`;
+    <div class="card" data-id="${m.tmdb_id}">
+      <a href="/movie.html?id=${m.tmdb_id}">
+        ${poster
+          ? `<img src="${poster}" alt="Poster for ${escapeHtml(title)}">`
+          : `<div style="height:240px;display:grid;place-items:center;background:#111;color:#fff">No image</div>`
+        }
+      </a>
+      <div class="meta">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <span>${escapeHtml(title)}</span>
+          <button class="btn danger remove-btn" type="button" data-id="${m.tmdb_id}">Remove</button>
+        </div>
+      </div>
+    </div>`;
 }
 
 el("loginForm").addEventListener("submit", async (e) => {
@@ -86,6 +94,35 @@ el("signupBtn").addEventListener("click", async () => {
     msg.textContent = err.response?.data?.message || "Sign up failed";
   }
 });
+
+grid.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.remove-btn');
+  if (!btn) return;
+
+  e.preventDefault();
+  const id = Number(btn.dataset.id);
+  const card = btn.closest('.card');
+  btn.disabled = true;
+
+  const res = await axios.delete('/api/watched', {
+    data: { tmdb_id: id },
+    withCredentials: true,
+    validateStatus: s => [200, 401, 404].includes(s)
+  });
+
+  if (res.status === 200 || res.status === 404) {
+    card.remove();
+    if (!grid.querySelector('.card')) {
+      grid.innerHTML = emptyStateHTML();
+    }
+  } else if (res.status === 401) {
+    location.href = '/account.html';
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Try again';
+  }
+});
+
 
 function escapeHtml(s=""){return s.replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));}
 
